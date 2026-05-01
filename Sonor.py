@@ -1,12 +1,17 @@
-import serial
-import time
-import requests
+import os
 import re
+import time
 
-PORT = 'COM4'
-BAUD = 9600
-BLYNK_AUTH_TOKEN = 'I7XkDimEb87J7ggY0qPLVxXSus5cJevC'
-VIRTUAL_PIN = 'V0'
+import requests
+import serial
+
+PORT = os.getenv("SERIAL_PORT", "COM4")
+BAUD = int(os.getenv("SERIAL_BAUD", "9600"))
+BLYNK_AUTH_TOKEN = os.getenv("BLYNK_AUTH_TOKEN")
+VIRTUAL_PIN = os.getenv("BLYNK_VIRTUAL_PIN", "V0")
+
+if not BLYNK_AUTH_TOKEN:
+    raise RuntimeError("BLYNK_AUTH_TOKEN is not set. Export it before running the script.")
 
 # Инициализация
 ser = serial.Serial(PORT, BAUD, timeout=1)
@@ -17,22 +22,23 @@ last_distance = None
 
 try:
     while True:
-        line = ser.readline().decode('utf-8').strip()
+        line = ser.readline().decode("utf-8").strip()
 
         if "Distance:" in line:
             print(f"[Serial] {line}")
 
-            match = re.search(r'Distance:\s*(\d+)', line)
+            match = re.search(r"Distance:\s*(\d+)", line)
             if match:
                 distance = int(match.group(1))
                 print(f"[Parsed] {distance} cm")
 
                 if distance != last_distance:
                     last_distance = distance
-                    url = f'https://blynk.cloud/external/api/update?token={BLYNK_AUTH_TOKEN}&{VIRTUAL_PIN}={distance}'
+                    url = "https://blynk.cloud/external/api/update"
+                    params = {"token": BLYNK_AUTH_TOKEN, VIRTUAL_PIN: distance}
 
                     try:
-                        response = requests.get(url, timeout=3)
+                        response = requests.get(url, params=params, timeout=3)
                         print(f"[Blynk] {response.status_code} → {response.text}")
                     except Exception as e:
                         print(f"[Error] Ошибка при запросе к Blynk: {e}")
