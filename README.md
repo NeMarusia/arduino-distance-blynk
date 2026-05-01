@@ -1,69 +1,40 @@
 # Система дистанционного мониторинга расстояния на базе Arduino и Blynk
 
-Прототип IoT-сенсора на Arduino Uno с ультразвуковым датчиком HC-SR04.  
-Измеряет расстояние и передаёт данные в облачный сервис Blynk для визуализации.  
-Разработан в рамках образовательной практики по направлению «Интернет вещей».
+Прототип IoT-сенсора на Arduino Uno с ультразвуковым датчиком HC-SR04. Измеряет расстояние через Serial и передаёт данные в Blynk Cloud для визуализации.
 
-## Стек технологий
+## Стек
 
 - Arduino C++
 - Python 3
 - Blynk IoT Cloud
-- HC-SR04 (ультразвуковой датчик расстояния)
+- HC-SR04
 
-## Структура проекта
+## Файлы
 
-- `arduino/sonar_distance.ino` — прошивка для Arduino Uno
-- `python/serial_to_blynk.py` — Python-скрипт для чтения данных с COM-порта и отправки их в Blynk
-- `README.md` — описание проекта
-- `.gitignore` — исключения для Arduino и Python сред
-- `requirements.txt` — зависимости Python-части (pyserial, requests)
+- `sonor_api.ino` — прошивка Arduino Uno для чтения HC-SR04.
+- `Sonor.py` — мост Serial → Blynk Cloud.
+- `.env.example` — пример переменных окружения без секретов.
+- `requirements.txt` — Python-зависимости.
 
-## Как использовать
+## Быстрый старт
 
-### 1. Подготовка оборудования
+1. Подключите HC-SR04: VCC → 5V, GND → GND, TRIG → D9, ECHO → D10.
+2. Загрузите `sonor_api.ino` на Arduino и закройте Serial Monitor в Arduino IDE.
+3. Установите зависимости:
 
-- Подключите HC-SR04 к Arduino Uno:
-  - VCC → 5V
-  - GND → GND
-  - TRIG → D9
-  - ECHO → D10
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 2. Настройка Blynk
+4. Передайте токен Blynk через переменную окружения:
 
-- Зарегистрируйтесь на [blynk.cloud](https://blynk.cloud)
-- Создайте новый Template
-- Добавьте Virtual Pin `V0` (тип: Integer, например от 0 до 400)
-- Создайте устройство на основе шаблона
-- Скопируйте **Auth Token** для использования в Python
+   ```bash
+   export BLYNK_AUTH_TOKEN="your_token_here"
+   export SERIAL_PORT="COM4"      # например /dev/ttyUSB0 на Linux
+   export BLYNK_VIRTUAL_PIN="V0"
+   python Sonor.py
+   ```
 
-### 3. Загрузка скетча
+## Безопасность
 
-- Откройте `arduino/sonar_distance.ino` в Arduino IDE
-- Загрузите на плату
-- После загрузки **обязательно закройте монитор порта в Arduino IDE** — иначе Python не сможет подключиться
-
-### 4. Запуск Python-скрипта
-
-- Установите зависимости:
-
-pip install -r requirements.txt
-
-
-- Убедитесь, что в `serial_to_blynk.py` указан правильный COM-порт и Auth Token
-- Запустите скрипт: python python/serial_to_blynk.py
-
-  
-### 5. Просмотр данных
-
-- Откройте Web Dashboard в Blynk
-- Добавьте виджет **Gauge**
-- Привяжите к Virtual Pin `V0`
-- Данные с датчика будут отображаться в реальном времени
-
-## Возможности расширения
-
-- Поддержка нескольких датчиков
-- Telegram-уведомления через webhook
-- Хранение данных в Google Sheets
-- Переход на ESP-платы для автономной работы без ПК
+Blynk Auth Token не хранится в коде. Если токен уже попадал в публичный репозиторий, его нужно перевыпустить в Blynk Cloud.
